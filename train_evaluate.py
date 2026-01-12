@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
-from model import HQC_model
+from model import AnalogyBasedCNN
 from data_preprocessing import preprocess_data, IMAGE_SIZE
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,14 +13,16 @@ results_dir = "training_results"
 os.makedirs(results_dir, exist_ok=True)
 
 # Load and preprocess data
-data_dir = "bone cancer detection.v1i.multiclass"
+# Data is in the parent directory
+data_dir = os.path.join("..", "bone cancer detection.v1i.multiclass")
 train_data, val_data, test_data, num_classes = preprocess_data(data_dir)
 
 print(f"Number of classes: {num_classes}")
 print(f"Class names: {train_data.class_indices}")
 
-# Create the model
-model = HQC_model(input_shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3), num_classes=num_classes)
+# Create the model using the analogy-based architecture
+# Input shape is (H, W, 1) for grayscale X-ray images
+model = AnalogyBasedCNN(input_shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 1), num_classes=num_classes)
 
 # Compile the model
 model.compile(
@@ -50,7 +52,8 @@ class CustomSaver(keras.callbacks.Callback):
         training_history["val_loss"].append(logs.get("val_loss", 0))
         
         # Save model after each epoch
-        model_path = os.path.join(results_dir, f"bone_cancer_hqc_model_epoch_{epoch+1}.keras")
+        # Using a neutral naming convention
+        model_path = os.path.join(results_dir, f"bone_cancer_cnn_model_epoch_{epoch+1}.keras")
         self.model.save(model_path)
         print(f"\nModel saved to {model_path}")
 
@@ -76,7 +79,10 @@ class CustomSaver(keras.callbacks.Callback):
         plt.grid(True)
         
         plt.tight_layout()
-        plt.savefig(os.path.join(results_dir, f"training_history_epoch_{epoch+1}.png"), dpi=300, bbox_inches="tight")
+        plt.tight_layout()
+        plt.savefig(os.path.join(results_dir, f"training_history_epoch_{epoch+1}.png"), dpi=600, bbox_inches="tight")
+        # Also save as SVG for scale-independent resolution
+        plt.savefig(os.path.join(results_dir, f"training_history_epoch_{epoch+1}.svg"), format="svg", bbox_inches="tight")
         plt.close()
         print(f"Training history plot saved for epoch {epoch+1}")
 
@@ -84,7 +90,7 @@ class CustomSaver(keras.callbacks.Callback):
 print("Starting training...")
 history = model.fit(
     train_data,
-    epochs=100,
+    epochs=50, # Reduced to 50 as per manuscript alignment
     validation_data=val_data,
     verbose=1,
     callbacks=[CustomSaver()]
@@ -131,8 +137,11 @@ plt.title("Confusion Matrix")
 plt.ylabel("True Label")
 plt.xlabel("Predicted Label")
 plt.tight_layout()
+plt.tight_layout()
 confusion_matrix_path = os.path.join(results_dir, "confusion_matrix.png")
-plt.savefig(confusion_matrix_path, dpi=300, bbox_inches="tight")
+confusion_matrix_svg_path = os.path.join(results_dir, "confusion_matrix.svg")
+plt.savefig(confusion_matrix_path, dpi=600, bbox_inches="tight")
+plt.savefig(confusion_matrix_svg_path, format="svg", bbox_inches="tight")
 plt.close()
 
 # AUC-ROC Plot
@@ -149,7 +158,9 @@ if num_classes == 2:
     plt.ylabel("True Positive Rate")
     plt.grid(True)
     auc_roc_path = os.path.join(results_dir, "auc_roc_curve.svg")
+    auc_roc_png_path = os.path.join(results_dir, "auc_roc_curve.png")
     plt.savefig(auc_roc_path, format="svg", bbox_inches="tight")
+    plt.savefig(auc_roc_png_path, dpi=600, bbox_inches="tight")
     plt.close()
     print(f"AUC-ROC curve saved as \"{auc_roc_path}\"")
 else:
@@ -184,7 +195,9 @@ plt.ylabel("Number of Correct Predictions")
 plt.xticks(rotation=45)
 
 plt.tight_layout()
-plt.savefig(os.path.join(results_dir, "final_training_summary.png"), dpi=300, bbox_inches="tight")
+plt.tight_layout()
+plt.savefig(os.path.join(results_dir, "final_training_summary.png"), dpi=600, bbox_inches="tight")
+plt.savefig(os.path.join(results_dir, "final_training_summary.svg"), format="svg", bbox_inches="tight")
 plt.close()
 
 print("\nTraining and evaluation complete!")

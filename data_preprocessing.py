@@ -53,6 +53,9 @@ def preprocess_data(data_dir):
     # Ensure consistent class mapping across generators
     all_labels = ["cancerous", "non_cancerous"]
 
+    # Pixel intensities are normalized to [0, 1] range by dividing by 255.0.
+    # This is a standard practice in deep learning to improve convergence speed 
+    # and numerical stability, treating pixel values as continuous float features.
     datagen = ImageDataGenerator(
         rescale=1./255,
         rotation_range=20,
@@ -71,6 +74,7 @@ def preprocess_data(data_dir):
         target_size=IMAGE_SIZE,
         batch_size=BATCH_SIZE,
         class_mode="categorical",
+        color_mode="grayscale",
         classes=all_labels
     )
 
@@ -81,6 +85,7 @@ def preprocess_data(data_dir):
         target_size=IMAGE_SIZE,
         batch_size=BATCH_SIZE,
         class_mode="categorical",
+        color_mode="grayscale",
         classes=all_labels
     )
 
@@ -91,6 +96,7 @@ def preprocess_data(data_dir):
         target_size=IMAGE_SIZE,
         batch_size=BATCH_SIZE,
         class_mode="categorical",
+        color_mode="grayscale",
         classes=all_labels,
         shuffle=False # Keep order for evaluation
     )
@@ -98,7 +104,7 @@ def preprocess_data(data_dir):
     return train_generator, validation_generator, test_generator, len(all_labels)
 
 if __name__ == "__main__":
-    data_dir = r"D:\bone_cancer_detector\Images"
+    data_dir = "bone cancer detection.v1i.multiclass"
     train_data, val_data, test_data, num_classes = preprocess_data(data_dir)
     print("Data preprocessing complete.")
     print(f"Number of training samples: {train_data.samples}")
